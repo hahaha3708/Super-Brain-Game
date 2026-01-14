@@ -1,25 +1,14 @@
-// vite.config.ts (chỉnh sửa)
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
-  return {
-    base: '/Super-Brain-Game/',
-    server: {
-      port: 3000,
-      host: '0.0.0.0',
-    },
-    plugins: [react()],
-    define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      }
-    }
-  };
+export default defineConfig({
+  plugins: [react()],
+  base: '/Super-Brain-Game/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+  },
+  define: {
+    'process.env': process.env
+  }
 });

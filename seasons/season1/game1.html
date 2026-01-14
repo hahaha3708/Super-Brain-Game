@@ -8,15 +8,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+      }
+    }
+    </script>
 </head>
 <body class="bg-[#020617] text-slate-100 font-inter h-screen overflow-hidden">
     <canvas id="particle-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
     <div id="game-container" class="relative z-10 flex flex-col items-center justify-center h-full px-6">
-        
-        <!-- Briefing Phase -->
         <div id="briefing-ui" class="max-w-2xl w-full glass-effect p-12 rounded-xl border border-cyan-500/30 text-center space-y-8 animate-fade-in">
-            <h2 className="text-cyan-400 font-orbitron text-xs tracking-[0.3em] uppercase">Định hướng Thử thách</h2>
+            <h2 class="text-cyan-400 font-orbitron text-xs tracking-[0.3em] uppercase">Định hướng Thử thách</h2>
             <h1 class="text-4xl font-orbitron font-bold text-white uppercase">Số học Thần kinh</h1>
             <div class="py-6 border-y border-slate-800">
                 <p id="briefing-text" class="text-slate-300 italic font-light leading-relaxed">Hệ thống đang phân tích giao thức...</p>
@@ -24,7 +32,6 @@
             <button id="start-btn" class="px-12 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-bold text-lg rounded shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all">Kết nối Hệ thần kinh</button>
         </div>
 
-        <!-- Playing Phase -->
         <div id="playing-ui" class="hidden w-full max-w-4xl space-y-12">
             <div class="flex justify-between items-center px-4 font-orbitron">
                 <div>
@@ -50,7 +57,6 @@
             </div>
         </div>
 
-        <!-- Result Phase -->
         <div id="result-ui" class="hidden max-w-2xl w-full glass-effect p-12 rounded-xl border border-amber-500/30 text-center space-y-10 animate-fade-in">
             <h2 class="text-amber-500 font-orbitron text-xs tracking-[0.3em] uppercase">Thử thách Kết thúc</h2>
             <h1 id="final-score" class="text-6xl font-orbitron font-bold text-white">0</h1>
@@ -59,7 +65,7 @@
             </div>
             <div class="flex flex-col md:flex-row gap-4 justify-center">
                 <button onclick="location.reload()" class="px-8 py-3 border border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-slate-950 font-orbitron font-bold text-sm rounded transition-all">Thử lại</button>
-                <a href="index.html" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-orbitron font-bold text-sm rounded transition-all">Trở về Trạm</a>
+                <a href="../../index.html" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-orbitron font-bold text-sm rounded transition-all">Trở về Trạm</a>
             </div>
         </div>
     </div>
@@ -77,7 +83,6 @@
         const resultUI = document.getElementById('result-ui');
         const input = document.getElementById('math-input');
 
-        // Init Briefing
         getBriefing('Số học Thần kinh').then(text => {
             document.getElementById('briefing-text').innerText = text;
         });
