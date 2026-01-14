@@ -1,8 +1,0 @@
-
-{
-  "name": "Mind Games Hub",
-  "description": "An elite brain-training platform inspired by intellectual challenge shows, featuring a sleek futuristic interface and focused cognitive exercises.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
-}
