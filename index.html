@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Games Hub | Hệ thống Thử thách Trí tuệ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+      }
+    }
+    </script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-[#020617] text-slate-100 font-inter overflow-x-hidden">
+    <!-- Phần tử root để tránh lỗi React mount -->
+    <div id="root"></div>
+
+    <canvas id="particle-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <header class="fixed top-0 w-full z-50 glass-effect border-b border-cyan-900/30">
+        <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded bg-cyan-500/20 border border-cyan-500 flex items-center justify-center">
+                    <span class="font-orbitron font-bold text-cyan-400 text-sm">M</span>
+                </div>
+                <h1 class="font-orbitron font-bold tracking-widest text-xl uppercase">Mind Games <span class="text-cyan-400">Hub</span></h1>
+            </div>
+            <button id="audio-toggle" class="flex items-center space-x-2 px-3 py-1.5 rounded border border-slate-700 text-slate-500 hover:border-slate-500 transition-all uppercase text-xs font-bold tracking-widest">
+                <span>Âm thanh: Tắt</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 pt-32 pb-20 container mx-auto px-6">
+        <div class="text-center mb-16 space-y-4">
+            <h2 class="text-cyan-400 font-orbitron font-bold tracking-[0.3em] text-sm uppercase">Tiến hóa Nhận thức</h2>
+            <h1 class="text-5xl md:text-7xl font-orbitron font-bold text-white tracking-tighter uppercase">Chọn <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-400">Mùa Giải</span></h1>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+            <!-- Season 1 -->
+            <a href="seasons/season1/index.html" class="group relative block">
+                <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
+                <div class="relative glass-effect p-8 rounded-lg border border-slate-800 hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex justify-between items-start mb-6">
+                        <span class="text-cyan-400 font-orbitron text-xs font-bold tracking-widest bg-cyan-500/10 px-3 py-1 rounded">MÙA 01</span>
+                    </div>
+                    <h3 class="text-3xl font-orbitron font-bold text-slate-100 group-hover:text-cyan-400 transition-colors mb-2">Cơ sở Hạ tầng</h3>
+                    <p class="text-slate-400 text-sm mb-6 uppercase tracking-wider font-semibold">Đánh thức Hệ thần kinh</p>
+                    <p class="text-slate-500 text-sm mb-8 leading-relaxed">Làm chủ các con đường nhận thức cơ bản cần thiết cho sự cạnh tranh tinh thần ở cấp độ cao.</p>
+                    <div class="text-cyan-400 font-bold text-xs tracking-widest uppercase flex items-center">
+                        Truy cập Hệ thống <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Season 2 (Coming Soon) -->
+            <div class="relative glass-effect p-8 rounded-lg border border-dashed border-slate-700 flex flex-col items-center justify-center text-center opacity-60">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-slate-500 font-orbitron font-bold text-xl mb-1">Mùa 02</h3>
+                <p class="text-slate-600 text-xs uppercase tracking-widest">Dữ liệu đang được mã hóa</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- index.tsx sẽ được tự động import bởi hệ thống, main.js xử lý logic vanilla -->
+    <script type="module" src="js/main.js"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

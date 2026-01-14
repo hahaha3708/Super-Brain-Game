@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Số học Thần kinh | Mind Games Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#020617] text-slate-100 font-inter h-screen overflow-hidden">
+    <canvas id="particle-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <div id="game-container" class="relative z-10 flex flex-col items-center justify-center h-full px-6">
+        
+        <!-- Briefing Phase -->
+        <div id="briefing-ui" class="max-w-2xl w-full glass-effect p-12 rounded-xl border border-cyan-500/30 text-center space-y-8 animate-fade-in">
+            <h2 className="text-cyan-400 font-orbitron text-xs tracking-[0.3em] uppercase">Định hướng Thử thách</h2>
+            <h1 class="text-4xl font-orbitron font-bold text-white uppercase">Số học Thần kinh</h1>
+            <div class="py-6 border-y border-slate-800">
+                <p id="briefing-text" class="text-slate-300 italic font-light leading-relaxed">Hệ thống đang phân tích giao thức...</p>
+            </div>
+            <button id="start-btn" class="px-12 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-bold text-lg rounded shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all">Kết nối Hệ thần kinh</button>
+        </div>
+
+        <!-- Playing Phase -->
+        <div id="playing-ui" class="hidden w-full max-w-4xl space-y-12">
+            <div class="flex justify-between items-center px-4 font-orbitron">
+                <div>
+                    <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest block">Hiệu suất</span>
+                    <div id="score-display" class="text-3xl font-bold text-white tracking-widest">00000</div>
+                </div>
+                <div class="text-center">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest block mb-1">Thời gian</span>
+                    <div id="timer-display" class="text-4xl font-bold text-cyan-400">30s</div>
+                </div>
+                <div class="text-right">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest block">Giao thức</span>
+                    <div class="text-lg font-bold text-slate-300 uppercase">Math-Sprint</div>
+                </div>
+            </div>
+
+            <div class="glass-effect rounded-2xl p-20 border border-slate-800 shadow-2xl flex flex-col items-center justify-center min-h-[400px]">
+                <div id="math-question" class="text-8xl font-orbitron font-bold text-white mb-12 select-none tracking-tighter">--</div>
+                <form id="math-form" class="w-full max-w-sm">
+                    <input id="math-input" type="number" autofocus class="bg-transparent border-b-2 border-cyan-500 text-6xl font-orbitron text-center text-white w-full outline-none focus:border-white transition-colors py-2" placeholder="?">
+                    <p class="text-slate-600 text-[10px] uppercase font-bold tracking-[0.2em] mt-8 text-center">Ấn Enter để xác nhận</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Result Phase -->
+        <div id="result-ui" class="hidden max-w-2xl w-full glass-effect p-12 rounded-xl border border-amber-500/30 text-center space-y-10 animate-fade-in">
+            <h2 class="text-amber-500 font-orbitron text-xs tracking-[0.3em] uppercase">Thử thách Kết thúc</h2>
+            <h1 id="final-score" class="text-6xl font-orbitron font-bold text-white">0</h1>
+            <div class="py-8 bg-slate-900/40 rounded-lg px-8">
+                <p id="analysis-text" class="text-slate-300 text-lg leading-relaxed italic">Hệ thống đang đánh giá...</p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="location.reload()" class="px-8 py-3 border border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-slate-950 font-orbitron font-bold text-sm rounded transition-all">Thử lại</button>
+                <a href="index.html" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-orbitron font-bold text-sm rounded transition-all">Trở về Trạm</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getBriefing, getAnalysis } from '../../js/main.js';
+
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+        let currentAns = 0;
+
+        const briefingUI = document.getElementById('briefing-ui');
+        const playingUI = document.getElementById('playing-ui');
+        const resultUI = document.getElementById('result-ui');
+        const input = document.getElementById('math-input');
+
+        // Init Briefing
+        getBriefing('Số học Thần kinh').then(text => {
+            document.getElementById('briefing-text').innerText = text;
+        });
+
+        document.getElementById('start-btn').onclick = () => {
+            briefingUI.classList.add('hidden');
+            playingUI.classList.remove('hidden');
+            startRound();
+            startTimer();
+        };
+
+        function startRound() {
+            const a = Math.floor(Math.random() * 15) + 5;
+            const b = Math.floor(Math.random() * 15) + 5;
+            const ops = ['+', '*', '-'];
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            
+            let q = `${a} ${op === '*' ? '×' : op} ${b}`;
+            currentAns = eval(`${a} ${op} ${b}`);
+            
+            document.getElementById('math-question').innerText = q;
+            input.value = '';
+            input.focus();
+        }
+
+        document.getElementById('math-form').onsubmit = (e) => {
+            e.preventDefault();
+            if (parseInt(input.value) === currentAns) {
+                score += 100;
+                document.getElementById('score-display').innerText = score.toString().padStart(5, '0');
+                startRound();
+            } else {
+                input.value = '';
+            }
+        };
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').innerText = timeLeft + 's';
+                if (timeLeft < 10) document.getElementById('timer-display').classList.add('text-red-500', 'animate-pulse');
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        async function endGame() {
+            playingUI.classList.add('hidden');
+            resultUI.classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            const analysis = await getAnalysis('Số học Thần kinh', score);
+            document.getElementById('analysis-text').innerText = `"${analysis}"`;
+        }
+    </script>
+    <script type="module" src="../../js/main.js"></script>
+</body>
+</html>
