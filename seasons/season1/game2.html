@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>3×3 Jigsaw – Super Brain</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-[#020617] text-white font-[Orbitron] flex items-center justify-center min-h-screen py-8">
+
+<!-- START SCREEN -->
+<div id="start-ui" class="text-center space-y-8">
+  <h1 class="text-4xl tracking-widest">3×3 JIGSAW</h1>
+  <p class="text-slate-400 text-sm uppercase tracking-widest">
+    Spatial Intelligence Challenge
+  </p>
+  <button id="start-btn"
+    class="px-10 py-4 bg-cyan-500 text-slate-900 font-bold rounded hover:bg-cyan-400 transition shadow-lg">
+    START
+  </button>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown-ui" class="hidden text-center">
+  <div id="countdown-number" class="text-[120px] font-bold text-cyan-400">3</div>
+</div>
+
+<!-- GAME UI -->
+<div id="game-ui" class="hidden flex flex-col items-center space-y-8 w-full max-w-4xl px-4">
+  <!-- Tray -->
+  <div class="w-full">
+    <p class="text-xs text-slate-400 uppercase tracking-widest mb-3">Piece Tray</p>
+    <div id="tray" class="flex flex-wrap gap-3 justify-center"></div>
+  </div>
+
+  <!-- Board -->
+  <div class="w-full">
+    <p class="text-xs text-slate-400 uppercase tracking-widest mb-3">Assembly Board</p>
+    <div id="board" class="grid grid-cols-3 gap-2 mx-auto" style="width: fit-content;"></div>
+  </div>
+
+  <p class="text-xs text-slate-400 uppercase tracking-widest text-center">
+    Click piece to select · Click again to rotate · Click board to place<br>
+    Arrow keys · R to rotate · Space to place · Backspace to return piece
+  </p>
+
+  <div class="flex gap-4">
+    <button id="return-btn" class="px-6 py-2 border border-amber-400 rounded hover:bg-amber-400 hover:text-black transition text-sm uppercase tracking-widest">
+      Trả lại mảnh
+    </button>
+    <button id="giveup-btn" class="px-6 py-2 border border-red-400 rounded hover:bg-red-400 hover:text-black transition text-sm uppercase tracking-widest">
+      Bỏ cuộc
+    </button>
+  </div>
+</div>
+
+<!-- WIN UI -->
+<div id="win-ui" class="hidden text-center space-y-6">
+  <h2 class="text-4xl text-amber-400 tracking-widest">PERFECT MIND</h2>
+  <button onclick="location.reload()"
+    class="px-8 py-3 border border-cyan-400 rounded hover:bg-cyan-400 hover:text-black transition">
+    Restart
+  </button>
+  <button onclick="window.location.href='../../index.html'"
+    class="px-8 py-3 border border-cyan-400 rounded hover:bg-cyan-400 hover:text-black transition">
+    Back to Hub
+  </button>
+</div>
+
+<script>
+/* ===============================
+   CORE GAME LOGIC
+================================ */
+
+const startUI = document.getElementById("start-ui");
+const countdownUI = document.getElementById("countdown-ui");
+const gameUI = document.getElementById("game-ui");
+const winUI = document.getElementById("win-ui");
+const trayEl = document.getElementById("tray");
+const boardEl = document.getElementById("board");
+const countdownNumber = document.getElementById("countdown-number");
+
+// Piece: [top, right, bottom, left] where 1=tab, -1=blank
+let pieces = [];
+let board = Array(9).fill(null); // null or {id, rotation}
+let selectedPiece = null;
+let selectedBoardCell = 0;
+
+/* ---------- INIT ---------- */
+
+document.getElementById("start-btn").onclick = startCountdown;
+
+function startCountdown() {
+  startUI.classList.add("hidden");
+  countdownUI.classList.remove("hidden");
+
+  let n = 3;
+  countdownNumber.innerText = n;
+
+  const timer = setInterval(() => {
+    n--;
+    countdownNumber.innerText = n;
+
+    if (n === 0) {
+      clearInterval(timer);
+      countdownUI.classList.add("hidden");
+      startGame();
+    }
+  }, 1000);
+}
+
+/* ---------- GAME ---------- */
+
+function startGame() {
+  generatePuzzle();
+  gameUI.classList.remove("hidden");
+  render();
+}
+
+// Generate a valid 3×3 jigsaw puzzle
+function generatePuzzle() {
+  const grid = [
+    [null, null, null],
+    [null, null, null],
+    [null, null, null]
+  ];
+
+  // Generate connectors: each internal edge gets a random ±1
+  // Horizontal edges (between columns)
+  const h = [
+    [rand(), rand()], // row 0: between col 0-1, 1-2
+    [rand(), rand()], // row 1
+    [rand(), rand()]  // row 2
+  ];
+
+  // Vertical edges (between rows)
+  const v = [
+    [rand(), rand(), rand()], // between row 0-1
+    [rand(), rand(), rand()]  // between row 1-2
+  ];
+
+  // Outer edges are flat (0)
+  const topEdge = [0, 0, 0];
+  const bottomEdge = [0, 0, 0];
+  const leftEdge = [0, 0, 0];
+  const rightEdge = [0, 0, 0];
+
+  // Build pieces: [top, right, bottom, left]
+  pieces = [];
+  let id = 0;
+
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const top = r === 0 ? topEdge[c] : -v[r-1][c];
+      const bottom = r === 2 ? bottomEdge[c] : v[r][c];
+      const left = c === 0 ? leftEdge[r] : -h[r][c-1];
+      const right = c === 2 ? rightEdge[r] : h[r][c];
+
+      pieces.push({
+        id: id++,
+        connectors: [top, right, bottom, left],
+        rotation: 0,
+        correctPos: r * 3 + c,
+        correctRot: 0
+      });
+    }
+  }
+
+  // Shuffle pieces
+  pieces.sort(() => Math.random() - 0.5);
+}
+
+function rand() {
+  return Math.random() < 0.5 ? 1 : -1;
+}
+
+/* ---------- ROTATION ---------- */
+
+// Rotate connectors array by 90° clockwise
+function rotate(connectors) {
+  return [connectors[3], connectors[0], connectors[1], connectors[2]];
+}
+
+function getRotated(piece) {
+  let c = [...piece.connectors];
+  for (let i = 0; i < piece.rotation; i++) {
+    c = rotate(c);
+  }
+  return c;
+}
+
+/* ---------- FIT CHECK ---------- */
+
+function canPlace(pieceId, rotation, pos) {
+  const piece = pieces.find(p => p.id === pieceId);
+  let c = [...piece.connectors];
+  for (let i = 0; i < rotation; i++) c = rotate(c);
+
+  const r = Math.floor(pos / 3);
+  const col = pos % 3;
+
+  // Check top
+  if (r > 0) {
+    const above = board[pos - 3];
+    if (above) {
+      const abovePiece = pieces.find(p => p.id === above.id);
+      const aboveC = getRotated(abovePiece);
+      if (c[0] + aboveC[2] !== 0) return false;
+    }
+  }
+
+  // Check right
+  if (col < 2) {
+    const right = board[pos + 1];
+    if (right) {
+      const rightPiece = pieces.find(p => p.id === right.id);
+      const rightC = getRotated(rightPiece);
+      if (c[1] + rightC[3] !== 0) return false;
+    }
+  }
+
+  // Check bottom
+  if (r < 2) {
+    const below = board[pos + 3];
+    if (below) {
+      const belowPiece = pieces.find(p => p.id === below.id);
+      const belowC = getRotated(belowPiece);
+      if (c[2] + belowC[0] !== 0) return false;
+    }
+  }
+
+  // Check left
+  if (col > 0) {
+    const left = board[pos - 1];
+    if (left) {
+      const leftPiece = pieces.find(p => p.id === left.id);
+      const leftC = getRotated(leftPiece);
+      if (c[3] + leftC[1] !== 0) return false;
+    }
+  }
+
+  return true;
+}
+
+/* ---------- RENDER ---------- */
+
+function render() {
+  renderTray();
+  renderBoard();
+}
+
+function renderTray() {
+  trayEl.innerHTML = "";
+  
+  pieces.forEach(p => {
+    if (board.some(b => b && b.id === p.id)) return; // Skip placed pieces
+
+    const el = document.createElement("div");
+    el.className = `relative cursor-pointer transition ${
+      selectedPiece === p.id ? "ring-4 ring-amber-400" : ""
+    }`;
+    el.onclick = () => selectPiece(p.id);
+
+    el.innerHTML = renderPiece(p, 60);
+    trayEl.appendChild(el);
+  });
+}
+
+function renderBoard() {
+  boardEl.innerHTML = "";
+
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement("div");
+    cell.className = `w-24 h-24 border-2 border-slate-700 rounded flex items-center justify-center cursor-pointer transition ${
+      i === selectedBoardCell && !board[i] ? "ring-4 ring-cyan-400" : ""
+    }`;
+    cell.onclick = () => placeOnBoard(i);
+
+    if (board[i]) {
+      const piece = pieces.find(p => p.id === board[i].id);
+      const rotated = { ...piece, rotation: board[i].rotation };
+      cell.innerHTML = renderPiece(rotated, 80);
+    }
+
+    boardEl.appendChild(cell);
+  }
+}
+
+// SVG rendering of puzzle piece with connectors
+function renderPiece(piece, size) {
+  const c = getRotated(piece);
+  const s = size;
+  const tab = s * 0.15;
+
+  let path = `M ${s*0.25} ${s*0.25}`;
+
+  // Top edge
+  if (c[0] === 1) {
+    path += ` L ${s*0.45} ${s*0.25} Q ${s*0.5} ${s*0.1} ${s*0.55} ${s*0.25}`;
+  } else if (c[0] === -1) {
+    path += ` L ${s*0.45} ${s*0.25} Q ${s*0.5} ${s*0.4} ${s*0.55} ${s*0.25}`;
+  } else {
+    path += ` L ${s*0.75} ${s*0.25}`;
+  }
+  if (c[0] !== 0) path += ` L ${s*0.75} ${s*0.25}`;
+
+  // Right edge
+  if (c[1] === 1) {
+    path += ` L ${s*0.75} ${s*0.45} Q ${s*0.9} ${s*0.5} ${s*0.75} ${s*0.55}`;
+  } else if (c[1] === -1) {
+    path += ` L ${s*0.75} ${s*0.45} Q ${s*0.6} ${s*0.5} ${s*0.75} ${s*0.55}`;
+  } else {
+    path += ` L ${s*0.75} ${s*0.75}`;
+  }
+  if (c[1] !== 0) path += ` L ${s*0.75} ${s*0.75}`;
+
+  // Bottom edge
+  if (c[2] === 1) {
+    path += ` L ${s*0.55} ${s*0.75} Q ${s*0.5} ${s*0.9} ${s*0.45} ${s*0.75}`;
+  } else if (c[2] === -1) {
+    path += ` L ${s*0.55} ${s*0.75} Q ${s*0.5} ${s*0.6} ${s*0.45} ${s*0.75}`;
+  } else {
+    path += ` L ${s*0.25} ${s*0.75}`;
+  }
+  if (c[2] !== 0) path += ` L ${s*0.25} ${s*0.75}`;
+
+  // Left edge
+  if (c[3] === 1) {
+    path += ` L ${s*0.25} ${s*0.55} Q ${s*0.1} ${s*0.5} ${s*0.25} ${s*0.45}`;
+  } else if (c[3] === -1) {
+    path += ` L ${s*0.25} ${s*0.55} Q ${s*0.4} ${s*0.5} ${s*0.25} ${s*0.45}`;
+  } else {
+    path += ` L ${s*0.25} ${s*0.25}`;
+  }
+  if (c[3] !== 0) path += ` L ${s*0.25} ${s*0.25}`;
+  
+  path += ` Z`;
+
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+    <path d="${path}" fill="#06b6d4" stroke="#0e7490" stroke-width="1.5"/>
+  </svg>`;
+}
+
+/* ---------- INTERACTIONS ---------- */
+
+document.getElementById("return-btn").onclick = returnPiece;
+document.getElementById("giveup-btn").onclick = () => {
+  if (confirm("Bạn có chắc muốn bỏ cuộc?")) {
+    location.reload();
+  }
+};
+
+function selectPiece(id) {
+  if (selectedPiece === id) {
+    // Rotate
+    const piece = pieces.find(p => p.id === id);
+    piece.rotation = (piece.rotation + 1) % 4;
+  } else {
+    selectedPiece = id;
+  }
+  render();
+}
+
+function returnPiece() {
+  const cell = board[selectedBoardCell];
+  if (cell) {
+    board[selectedBoardCell] = null;
+    selectedPiece = cell.id;
+    render();
+  }
+}
+
+function placeOnBoard(pos) {
+  if (!selectedPiece || board[pos]) return;
+
+  const piece = pieces.find(p => p.id === selectedPiece);
+  if (!canPlace(piece.id, piece.rotation, pos)) {
+    // Invalid placement - visual feedback could be added
+    return;
+  }
+
+  board[pos] = { id: piece.id, rotation: piece.rotation };
+  selectedPiece = null;
+  render();
+  checkWin();
+}
+
+/* ---------- KEYBOARD ---------- */
+
+document.addEventListener("keydown", e => {
+  if (gameUI.classList.contains("hidden")) return;
+
+  const x = selectedBoardCell % 3;
+  const y = Math.floor(selectedBoardCell / 3);
+
+  if (e.key === "ArrowUp" && y > 0) selectedBoardCell -= 3;
+  if (e.key === "ArrowDown" && y < 2) selectedBoardCell += 3;
+  if (e.key === "ArrowLeft" && x > 0) selectedBoardCell -= 1;
+  if (e.key === "ArrowRight" && x < 2) selectedBoardCell += 1;
+
+  if (e.key === "r" || e.key === "R") {
+    if (selectedPiece) {
+      const piece = pieces.find(p => p.id === selectedPiece);
+      piece.rotation = (piece.rotation + 1) % 4;
+    }
+  }
+
+  if (e.key === " ") {
+    e.preventDefault();
+    placeOnBoard(selectedBoardCell);
+  }
+
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    returnPiece();
+  }
+
+  render();
+});
+
+/* ---------- WIN CHECK ---------- */
+
+function checkWin() {
+  if (board.some(b => !b)) return;
+  gameUI.classList.add("hidden");
+  winUI.classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
