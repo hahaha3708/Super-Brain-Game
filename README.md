@@ -1,1 +1,1 @@
-hahaha3708.github.io/Super-Brain-Game/
+https://hahaha3708.github.io/Super-Brain-Game/
