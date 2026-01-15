@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>15 Puzzle – Super Brain</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-[#020617] text-white font-[Orbitron] flex items-center justify-center h-screen">
+
+<!-- START SCREEN -->
+<div id="start-ui" class="text-center space-y-8">
+  <h1 class="text-4xl tracking-widest">15 PUZZLE</h1>
+  <p class="text-slate-400 text-sm uppercase tracking-widest">
+    Spatial Intelligence Challenge
+  </p>
+  <button id="start-btn"
+    class="px-10 py-4 bg-cyan-500 text-slate-900 font-bold rounded
+           hover:bg-cyan-400 transition shadow-lg">
+    START
+  </button>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown-ui" class="hidden text-center">
+  <div id="countdown-number" class="text-[120px] font-bold text-cyan-400">3</div>
+</div>
+
+<!-- GAME UI -->
+<div id="game-ui" class="hidden flex flex-col items-center space-y-6">
+  <div class="grid grid-cols-4 gap-3" id="puzzle"></div>
+
+  <p class="text-xs text-slate-400 uppercase tracking-widest">
+    Arrow keys to select · Space to move · Click tiles
+  </p>
+</div>
+
+<!-- WIN UI -->
+<div id="win-ui" class="hidden text-center space-y-6">
+  <h2 class="text-4xl text-amber-400 tracking-widest">PERFECT MIND</h2>
+  <button onclick="location.reload()"
+    class="px-8 py-3 border border-cyan-400 rounded hover:bg-cyan-400 hover:text-black transition">
+    Restart
+  </button>
+  <button onclick="location.href='../../index.html'"
+    class="px-8 py-3 border border-cyan-400 rounded hover:bg-cyan-400 hover:text-black transition">
+    Back to Hub
+  </button>
+</div>
+
+<script>
+/* ===============================
+   CORE GAME LOGIC
+================================ */
+
+const startUI = document.getElementById("start-ui");
+const countdownUI = document.getElementById("countdown-ui");
+const gameUI = document.getElementById("game-ui");
+const winUI = document.getElementById("win-ui");
+
+const puzzleEl = document.getElementById("puzzle");
+const countdownNumber = document.getElementById("countdown-number");
+
+let board = [];
+let selectedIndex = 0;
+let inputLocked = false;
+
+/* ---------- INIT ---------- */
+
+document.getElementById("start-btn").onclick = startCountdown;
+
+function startCountdown() {
+  startUI.classList.add("hidden");
+  countdownUI.classList.remove("hidden");
+  inputLocked = true;
+
+  let n = 3;
+  countdownNumber.innerText = n;
+
+  const timer = setInterval(() => {
+    n--;
+    countdownNumber.innerText = n;
+
+    if (n === 0) {
+      clearInterval(timer);
+      countdownUI.classList.add("hidden");
+      startGame();
+    }
+  }, 1000);
+}
+
+/* ---------- GAME ---------- */
+
+function startGame() {
+  gameUI.classList.remove("hidden");
+  initBoard();
+  shuffleSolvable(300);   // 🔥 CHUẨN 15-PUZZLE
+  render();
+  inputLocked = false;
+}
+
+function initBoard() {
+  board = [...Array(15).keys()].map(i => i + 1);
+  board.push(null);
+  selectedIndex = 0;
+}
+
+/* ---------- SOLVABLE SHUFFLE ---------- */
+
+function shuffleSolvable(steps = 200) {
+  let empty = board.indexOf(null);
+
+  for (let i = 0; i < steps; i++) {
+    const moves = getValidMoves(empty);
+    const next = moves[Math.floor(Math.random() * moves.length)];
+    swapRaw(empty, next);
+    empty = next;
+  }
+}
+
+function getValidMoves(index) {
+  const moves = [];
+  const x = index % 4;
+  const y = Math.floor(index / 4);
+
+  if (y > 0) moves.push(index - 4);
+  if (y < 3) moves.push(index + 4);
+  if (x > 0) moves.push(index - 1);
+  if (x < 3) moves.push(index + 1);
+
+  return moves;
+}
+
+/* ---------- RENDER ---------- */
+
+function render() {
+  puzzleEl.innerHTML = "";
+
+  board.forEach((value, i) => {
+    const tile = document.createElement("div");
+
+    tile.className = `
+      h-20 w-20 flex items-center justify-center
+      text-2xl font-bold rounded
+      ${value ? "bg-cyan-500 text-black cursor-pointer" : "bg-transparent"}
+      ${i === selectedIndex ? "ring-4 ring-amber-400" : ""}
+      transition
+    `;
+
+    tile.innerText = value ?? "";
+    tile.onclick = () => clickTile(i);
+
+    puzzleEl.appendChild(tile);
+  });
+}
+
+/* ---------- MOVEMENT ---------- */
+
+function clickTile(index) {
+  if (inputLocked) return;
+
+  const empty = board.indexOf(null);
+  if (isAdjacent(index, empty)) {
+    swap(index, empty);
+    selectedIndex = index; // 🔥 UX chuẩn
+  }
+}
+
+function swap(a, b) {
+  swapRaw(a, b);
+  render();
+  checkWin();
+}
+
+function swapRaw(a, b) {
+  [board[a], board[b]] = [board[b], board[a]];
+}
+
+function isAdjacent(a, b) {
+  const ax = a % 4, ay = Math.floor(a / 4);
+  const bx = b % 4, by = Math.floor(b / 4);
+  return Math.abs(ax - bx) + Math.abs(ay - by) === 1;
+}
+
+/* ---------- KEYBOARD CONTROL ---------- */
+
+document.addEventListener("keydown", e => {
+  if (gameUI.classList.contains("hidden") || inputLocked) return;
+
+  const x = selectedIndex % 4;
+  const y = Math.floor(selectedIndex / 4);
+
+  if (e.key === "ArrowUp" && y > 0) selectedIndex -= 4;
+  if (e.key === "ArrowDown" && y < 3) selectedIndex += 4;
+  if (e.key === "ArrowLeft" && x > 0) selectedIndex -= 1;
+  if (e.key === "ArrowRight" && x < 3) selectedIndex += 1;
+
+  if (e.key === " ") {
+    const empty = board.indexOf(null);
+    if (isAdjacent(selectedIndex, empty)) {
+      swap(selectedIndex, empty);
+    }
+  }
+
+  render();
+});
+
+/* ---------- WIN CHECK ---------- */
+
+function checkWin() {
+  for (let i = 0; i < 15; i++) {
+    if (board[i] !== i + 1) return;
+  }
+  gameUI.classList.add("hidden");
+  winUI.classList.remove("hidden");
+}
+</script>
+
+
+</body>
+</html>
